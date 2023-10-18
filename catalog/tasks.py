@@ -1,8 +1,10 @@
 import datetime
+
 from celery import shared_task
-from django.db.models import Sum
-from .models import ReadingSession
+
 from user.models import User
+from .models import ReadingSession, UserReadingStatistics
+
 
 @shared_task
 def update_reading_statistics():
@@ -13,20 +15,38 @@ def update_reading_statistics():
     users = User.objects.all()
 
     for user in users:
-        total_reading_time_7_days = ReadingSession.objects.filter(
+        total_reading_time_7_days = 0
+        total_reading_time_30_days = 0
+
+        reading_sessions_7_days = ReadingSession.objects.filter(
             user=user,
             end_time__isnull=False,
             start_time__gte=seven_days_ago,
             start_time__lte=today
-        ).aggregate(total_7_days=Sum('total_duration'))
+        )
 
-        total_reading_time_30_days = ReadingSession.objects.filter(
+        for session in reading_sessions_7_days:
+            total_reading_time_7_days += session.total_duration
+
+        reading_sessions_30_days = ReadingSession.objects.filter(
             user=user,
             end_time__isnull=False,
             start_time__gte=thirty_days_ago,
             start_time__lte=today
-        ).aggregate(total_30_days=Sum('total_duration'))
+        )
 
-        user.total_reading_time_7_days = total_reading_time_7_days['total_7_days'] or 0
-        user.total_reading_time_30_days = total_reading_time_30_days['total_30_days'] or 0
-        user.save()
+        for session in reading_sessions_30_days:
+            total_reading_time_30_days += session.total_duration
+
+        user_stats, created = UserReadingStatistics.objects.get_or_create(
+            user=user,
+            date=today,
+            defaults={
+                'total_reading_time_7_days': 0,
+                'total_reading_time_30_days': 0
+            }
+        )
+
+        user_stats.total_reading_time_7_days = total_reading_time_7_days
+        user_stats.total_reading_time_30_days = total_reading_time_30_days
+        user_stats.save()

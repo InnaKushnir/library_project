@@ -30,13 +30,14 @@ class ReadingSession(models.Model):
     end_time = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        if self.pk:
-            previous_sessions = ReadingSession.objects.filter(
-                user=self.user, book=self.book, end_time__isnull=True
-            ).exclude(pk=self.pk)
-            for session in previous_sessions:
-                session.end_time = self.start_time
-                session.save()
+        if self.end_time is not None:
+            if self.pk:
+                previous_sessions = ReadingSession.objects.filter(
+                    user=self.user, book=self.book, end_time__isnull=True
+                ).exclude(pk=self.pk)
+                for session in previous_sessions:
+                    session.end_time = self.start_time
+                    session.save()
         super().save(*args, **kwargs)
 
     @property
