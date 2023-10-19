@@ -1,13 +1,10 @@
 from django.utils import timezone
-
-from django.db.migrations import serializer
-from django.shortcuts import render
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from catalog.models import Book, ReadingSession
+from catalog.models import Book, ReadingSession, UserReadingStatistics
 from catalog.serializers import BookSerializer, BookDetailSerializer, BookCreateSerializer, ReadingSessionSerializer, \
-    ReadingSessionUpdateSerializer, ReadingSessionCreateSerializer
+    ReadingSessionUpdateSerializer, ReadingSessionCreateSerializer, UserReadingStatisticsSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet):
@@ -58,3 +55,6 @@ class ReadingSessionViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Книга не знайдена.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+class UserReadingStatisticsViewSet(viewsets.ModelViewSet):
+    queryset = UserReadingStatistics.objects.all()
+    serializer_class = UserReadingStatisticsSerializer

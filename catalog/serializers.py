@@ -1,8 +1,6 @@
-from rest_framework import serializers, viewsets, permissions
-from rest_framework.decorators import action
-from django.utils import timezone
+from rest_framework import serializers
 
-from catalog.models import Book, ReadingSession
+from catalog.models import Book, ReadingSession, UserReadingStatistics
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -52,3 +50,7 @@ class ReadingSessionUpdateSerializer(serializers.ModelSerializer):
         fields = ["book", "user", "start_time", "end_time", ]
 
 
+class UserReadingStatisticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserReadingStatistics
+        fields = "__all__"

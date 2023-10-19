@@ -64,3 +64,8 @@ services:
 volumes:
   db_pgdata:
   redis_data:
+
+
+networks:
+  djangonetwork:
+    driver: bridge
