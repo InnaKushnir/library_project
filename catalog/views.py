@@ -1,5 +1,6 @@
 from django.utils import timezone
 from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from catalog.models import Book, ReadingSession, UserReadingStatistics
@@ -23,6 +24,7 @@ class BookViewSet(viewsets.ModelViewSet):
 class ReadingSessionViewSet(viewsets.ModelViewSet):
     queryset = ReadingSession.objects.all()
     serializer_class = ReadingSessionSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.action == "update":
@@ -58,3 +60,10 @@ class ReadingSessionViewSet(viewsets.ModelViewSet):
 class UserReadingStatisticsViewSet(viewsets.ModelViewSet):
     queryset = UserReadingStatistics.objects.all()
     serializer_class = UserReadingStatisticsSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        queryset = UserReadingStatistics.objects.all()
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(user=self.request.user)
+        return queryset
