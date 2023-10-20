@@ -10,6 +10,6 @@ router.register("user_reading_statistics", UserReadingStatisticsViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
-    ]
+]
 
 app_name = "catalog"

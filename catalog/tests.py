@@ -1,14 +1,15 @@
+import datetime
+from datetime import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
-from datetime import datetime
-import datetime
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from django.urls import reverse
-from catalog.models import Book, ReadingSession, UserReadingStatistics
-from catalog.tasks import update_reading_statistics
+
+from catalog.models import Book, ReadingSession
 from catalog.serializers import (
     BookSerializer,
     ReadingSessionSerializer,
@@ -38,7 +39,7 @@ def sample_book(**kwargs):
 def sample_reading_session(user, **kwargs):
     defaults = {
         "start_time": timezone.make_aware(datetime(2023, 10, 20, 15, 45, 7, 152182), timezone.utc),
-        "end_time":  timezone.make_aware(datetime(2023, 10, 20, 15, 55, 9, 152182), timezone.utc),
+        "end_time": timezone.make_aware(datetime(2023, 10, 20, 15, 55, 9, 152182), timezone.utc),
         "book": sample_book(),
         "user": user,
     }
@@ -85,7 +86,7 @@ class AuthenticateReadingSessionTest(TestCase):
 
     def test_list_reading_sessions(self):
         res = self.client.get(READING_SESSION_URL)
-        reading_sessions= ReadingSession.objects.all()
+        reading_sessions = ReadingSession.objects.all()
         serializer = ReadingSessionSerializer(reading_sessions, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
@@ -145,5 +146,3 @@ class AuthenticateReadingSessionTest(TestCase):
             self.assertIsNone(total_reading_time)
         else:
             pass
-
-

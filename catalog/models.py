@@ -1,12 +1,9 @@
-from django.utils import timezone
-
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
 
 
 class Book(models.Model):
-
     title = models.CharField(max_length=63)
     author = models.CharField(max_length=124)
     publication_year = models.IntegerField()

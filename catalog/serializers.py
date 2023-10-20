@@ -15,7 +15,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Book
-        fields = ["title", "author", "publication_year", "short_description", "full_description", "last_reading_date", "total_reading_time"]
+        fields = ["title", "author", "publication_year", "short_description", "full_description", "last_reading_date",
+                  "total_reading_time"]
 
     def get_total_reading_time(self, obj):
         sessions = ReadingSession.objects.filter(book=obj, end_time__isnull=False)
@@ -44,7 +45,6 @@ class ReadingSessionCreateSerializer(serializers.ModelSerializer):
 
 
 class ReadingSessionUpdateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ReadingSession
         fields = ["book", "user", "start_time", "end_time", ]

@@ -13,10 +13,8 @@ class BookViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
-
             return BookDetailSerializer
         if self.action == "create":
-
             return BookCreateSerializer
         return BookSerializer
 
@@ -40,6 +38,7 @@ class ReadingSessionViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(user=self.request.user)
         return queryset
 
+    """Create new session and close previous session if it exists"""
     def create(self, request, *args, **kwargs):
         user = request.user
         book_id = request.data.get('book', None)
@@ -61,7 +60,7 @@ class UserReadingStatisticsViewSet(viewsets.ModelViewSet):
     queryset = UserReadingStatistics.objects.all()
     serializer_class = UserReadingStatisticsSerializer
     permission_classes = (IsAuthenticated,)
-
+    """Statistical data for user for 7 days and 30 days"""
     def get_queryset(self):
         queryset = UserReadingStatistics.objects.all()
         if not self.request.user.is_staff:

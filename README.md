@@ -1,6 +1,6 @@
-#### library-service
+#### library-project
 
-RESTful API for Library service.
+RESTful API for Library .
 
  #### Features
 * Users can register, login and logout in the library_project using email and password.
