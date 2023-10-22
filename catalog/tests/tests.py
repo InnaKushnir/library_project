@@ -1,5 +1,6 @@
 import datetime
 from datetime import datetime
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -9,11 +10,12 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from catalog.models import Book, ReadingSession
+from catalog.models import Book, ReadingSession, UserReadingStatistics
 from catalog.serializers import (
     BookSerializer,
     ReadingSessionSerializer,
 )
+from catalog.tasks import update_reading_statistics
 
 READING_SESSION_URL = reverse("catalog:readingsession-list")
 BOOK_URL = reverse("catalog:book-list")
@@ -110,10 +112,17 @@ class AuthenticateReadingSessionTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         reading_session_detail = serializer.data
-        print(serializer.data)
 
         self.assertEqual(reading_session_detail["user"], reading_session_.user.id)
         self.assertEqual(reading_session_detail["book"], reading_session_.book.id)
+
+    def test_total_duration_calculation(self):
+        self.session = sample_reading_session(user=self.user)
+        self.session.start_time = timezone.now()
+        self.session.end_time = timezone.now() + timedelta(hours=2)
+        self.session.save()
+
+        self.assertEqual(self.session.total_duration, 7200)
 
     def test_retrieve_book_detail(self):
         reading_session = sample_reading_session(user=self.user)
@@ -146,3 +155,48 @@ class AuthenticateReadingSessionTest(TestCase):
             self.assertIsNone(total_reading_time)
         else:
             pass
+
+
+class UserReadingStatisticsTestCase(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            email="12345@test.com", password="12345test"
+        )
+        self.client.force_authenticate(self.user)
+
+    def tearDown(self):
+        del self.user
+        del self.session_1
+        del self.session_2
+        del self.session_3
+
+    def test_update_reading_statistics(self):
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        self.session_1 = ReadingSession.objects.create(
+            book=sample_book(),
+            user=self.user,
+            end_time=seven_days_ago + timedelta(hours=1)
+        )
+        self.session_2 = ReadingSession.objects.create(
+            book=sample_book(),
+            user=self.user,
+            end_time=thirty_days_ago + timedelta(hours=1)
+        )
+        self.session_3 = ReadingSession.objects.create(
+            book=sample_book(),
+            user=self.user,
+            end_time=seven_days_ago + timedelta(hours=27)
+        )
+        self.session_1.start_time = timezone.now() - timedelta(days=7)
+        self.session_1.save()
+        self.session_2.start_time = timezone.now() - timedelta(days=30)
+        self.session_2.save()
+        self.session_3.start_time = timezone.now() - timedelta(days=6)
+        self.session_3.save()
+        update_reading_statistics()
+        user_stats = UserReadingStatistics.objects.get(user=self.user, date=timezone.now())
+
+        self.assertEqual(round(user_stats.total_reading_time_7_days), 14399)
+        self.assertEqual(round(user_stats.total_reading_time_30_days), 17999)
