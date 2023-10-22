@@ -39,6 +39,7 @@ class ReadingSession(models.Model):
                     session.save()
         super().save(*args, **kwargs)
 
+    """Calculate duration of reading session"""
     @property
     def total_duration(self):
         if self.end_time and self.start_time:
